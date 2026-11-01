@@ -2,6 +2,9 @@ package handler
 
 import (
 	"context"
+	"errors"
+
+	myerrors "github.com/tcarzverey/course-go-python/homeworks/hw1/handler/errors"
 )
 
 type Handler struct {
@@ -14,6 +17,25 @@ func NewHandler(db UsersDB) *Handler {
 
 func (h *Handler) UpdateUserBalance(ctx context.Context, userID, balance int64) error {
 	err := h.db.UpdateBalance(ctx, userID, balance)
-	// TODO: сюда вам нужно добавить логику обработки различных ошибок
-	return err
+	var re *myerrors.RetryableError
+	var nfe *myerrors.NotFoundError
+	var ame *myerrors.AdditionalMessageError
+	switch {
+	case errors.As(err, &re):
+		for i := 0; i < re.RetryCount(); i++ {
+			err := h.db.UpdateBalance(ctx, userID, balance)
+			if err == nil {
+				return nil
+			}
+		}
+		return err
+	case errors.As(err, &nfe):
+		return myerrors.NewAdditionalMessageError(err, "not found")
+	case errors.As(err, &ame):
+		return err
+	case err == nil:
+		return nil
+	default:
+		panic("wrong error type")
+	}
 }

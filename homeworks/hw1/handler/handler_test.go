@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tcarzverey/course-go-python/homeworks/hw1/handler/errors"
+	myerrors "github.com/tcarzverey/course-go-python/homeworks/hw1/handler/errors"
 )
 
 type dbStub struct {
@@ -26,7 +26,7 @@ func TestHandler_UpdateUserBalanceNoError(t *testing.T) {
 }
 
 func TestHandler_UpdateUserBalance_RetryableError(t *testing.T) {
-	retryErr := errors.NewRetryableError(2)
+	retryErr := myerrors.NewRetryableError(2)
 	wrappedErr := fmt.Errorf("retryErr: %w", retryErr)
 	h := NewHandler(&dbStub{res: wrappedErr})
 	userID, balance := int64(1), int64(100)
@@ -37,7 +37,7 @@ func TestHandler_UpdateUserBalance_RetryableError(t *testing.T) {
 }
 
 func TestHandler_UpdateUserBalance_NotFoundError(t *testing.T) {
-	notFoundErr := errors.NewNotFoundError(123)
+	notFoundErr := myerrors.NewNotFoundError(123)
 	wrappedErr := fmt.Errorf("notFoundErr: %w", notFoundErr)
 	h := NewHandler(&dbStub{res: wrappedErr})
 	userID, balance := int64(2), int64(200)
@@ -47,14 +47,14 @@ func TestHandler_UpdateUserBalance_NotFoundError(t *testing.T) {
 	require.ErrorIs(t, err, notFoundErr)
 
 	errI := any(err)
-	_, ok := errI.(*errors.AdditionalMessageError)
+	_, ok := errI.(*myerrors.AdditionalMessageError)
 	require.True(t, ok, "error should be wrapped in AdditionalMessageError")
 	// Проверяем, что сообщение содержит информацию о том, что пользователь не найден
 	require.Contains(t, err.Error(), "not found")
 }
 
 func TestHandler_UpdateUserBalance_AdditionalMessageError(t *testing.T) {
-	additionalErr := errors.NewAdditionalMessageError(fmt.Errorf("not found"), "not found")
+	additionalErr := myerrors.NewAdditionalMessageError(fmt.Errorf("not found"), "not found")
 	wrappedErr := fmt.Errorf("additionalErr: %w", additionalErr)
 	h := NewHandler(&dbStub{res: wrappedErr})
 	userID, balance := int64(2), int64(200)
