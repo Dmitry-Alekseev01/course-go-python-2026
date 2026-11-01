@@ -14,7 +14,7 @@ func NewRetryableError(retriesCount int) *RetryableError {
 }
 
 func (r *RetryableError) Error() string {
-	return fmt.Sprintf("retriable error")
+	return "retriable error"
 }
 
 func (r *RetryableError) RetryCount() int {

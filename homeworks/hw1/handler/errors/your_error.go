@@ -1,14 +1,36 @@
 package errors
 
+import "fmt"
+
 // AdditionalMessageError ошибка, которая
 type AdditionalMessageError struct {
-	// TODO: добавьте сюда свои поля
+	err    error
+	format string
+	args   []any
 }
 
 // NewAdditionalMessageError создает ошибку
 func NewAdditionalMessageError(err error, format string, args ...any) error {
-	// TODO: добавьте сюда создание ошибки
-	panic("unimplemented")
+	return &AdditionalMessageError{
+		err:    err,
+		format: format,
+		args:   args,
+	}
 }
 
-// TODO: добавьте сюда необходимые методы
+func (e *AdditionalMessageError) Error() string {
+	message := fmt.Sprintf(e.format, e.args...)
+
+	switch {
+	case e.err == nil:
+		return message
+	case e.format == "":
+		return e.err.Error()
+	default:
+		return message + ": " + e.err.Error()
+	}
+}
+
+func (e *AdditionalMessageError) Unwrap() error {
+	return e.err
+}
